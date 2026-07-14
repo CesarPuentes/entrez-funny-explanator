@@ -15,28 +15,45 @@ The application returns a standardized JSON object ready to be consumed by a fro
 
 ## 🛠️ Setup Instructions
 
-### 1. Local Configuration
-We have included a setup script to streamline the environment configuration.
-From the `src` folder, run the interactive installer:
+This project recommends using [**`uv`**](https://github.com/astral-sh/uv) (a fast Python package manager) to manage the virtual environment and dependencies.
+
+### 1. Initialize Virtual Environment with `uv`
+Set up your environment and dependencies from the root folder:
+
+```bash
+# Create a virtual environment
+uv venv
+
+# Activate it
+source .venv/bin/activate
+
+# Install dependencies
+uv pip install -r src/requirements.txt
+```
+
+*(Alternatively, using standard python: `python -m venv .venv && source .venv/bin/activate && pip install -r src/requirements.txt`)*
+
+### 2. Local Configuration
+We have included a setup script to streamline the environment configuration. Run it using `uv` (or `python`):
 
 ```bash
 cd src
-python install.py
+uv run install.py
 ```
 *   You will be prompted for your **DeepSeek API Key** and your **NCBI Entrez Email**.
 *   You will be asked to choose a deployment target (**AWS**, **GCP**, or **Local Only**).
 *   If you choose a cloud provider, it will automatically generate a `.env` file (for local testing) and a `terraform.tfvars` file (for cloud deployment).
 *   If you choose Local Only, it will skip the Terraform configuration and strictly set up your `.env` file for local execution.
 
-### 2. Local Execution
-You can run the script locally to test the integration.
+### 3. Local Execution
+You can run the script locally to test the integration using `uv` (or `python`):
 
 ```bash
 cd src
-python app.py
+uv run app.py
 ```
 
-### 3. Cloud Deployment (AWS / GCP)
+### 4. Cloud Deployment (AWS / GCP)
 Once you confirm that the local execution works, you can deploy it to the cloud.
 
 #### Preparing the Code
