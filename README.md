@@ -1,5 +1,16 @@
 # Entrez-Funny-Explanator
 
+## Sample output:
+
+```json
+{
+  "gene_name": "TP53",
+  "biological_function": "Tumor suppressor that regulates cell cycle arrest, apoptosis, senescence, DNA repair, and metabolism in response to cellular stress.",
+  "associated_diseases": ["Li-Fraumeni syndrome", "Various human cancers"],
+  "layman_summary": "Think of this gene as the 'no-returns policy' enforcer of a cell: it checks if a cell is damaged and forces it to either repair or shut down to prevent chaos. When it's broken, cells can turn into troublemakers (cancer)."
+}
+```
+
 ## 🧬 Overview
 Get explanations of what a gene does in a funny way. This project bridges the gap between **Bioinformatics** and **AI Engineering**.
 It automates clinical research for a given human gene by fetching data from the US government's public API (NCBI) and passing it to an LLM (DeepSeek) to analyze, summarize, and structure the dense scientific data. 
@@ -98,8 +109,10 @@ terraform apply
 ### 🧪 Testing the Cloud Deployment
 After running `terraform apply`, Terraform will output a `function_url` in your terminal. You can test your live cloud function using `curl` by sending a JSON payload.
 
+*(Note: Depending on your specific Cloud configuration, the URL may still need to be generated manually from the AWS/GCP consoles and configured accordingly before it is publicly accessible.)*
+
 ```bash
-# Replace <YOUR_FUNCTION_URL> with the output provided by Terraform
+# Replace <YOUR_FUNCTION_URL> with the output provided by Terraform (or your manual Console URL)
 curl -X POST -H "Content-Type: application/json" \
      -d '{"gene": "BRCA1"}' \
      <YOUR_FUNCTION_URL>
