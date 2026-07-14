@@ -29,11 +29,6 @@ jobs:
         with:
           terraform_version: "1.5.0"
 
-      - name: Install Python Dependencies
-        working-directory: ./src
-        run: |
-          pip install -r requirements.txt -t .
-
       - name: Terraform Init
         working-directory: ./src
         run: |

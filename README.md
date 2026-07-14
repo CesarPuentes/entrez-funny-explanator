@@ -63,6 +63,10 @@ The application logic lives in `src/app.py` to keep it readable, while cloud-spe
 
 The project is already configured to execute correctly on either platform out-of-the-box!
 
+**Note on Clean Dependency Packaging (No Directory Pollution):**
+*   **AWS (Lambda)**: The Terraform configuration uses a temporary build directory (`../outputs/build`) in the background. It copies only the necessary Python code and automatically installs package requirements there (using `uv` if available, falling back to `pip`) before zipping. Your local `src/` folder remains completely clean.
+*   **GCP (Cloud Functions)**: GCP builds your function natively on the cloud using `src/requirements.txt`. No local package installations are required for deploying.
+
 #### Deploying with Terraform
 Initialize and apply the Terraform configuration for your chosen provider.
 

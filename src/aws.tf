@@ -43,11 +43,32 @@ variable "deepseek_api_key" {
   sensitive   = true
 }
 
-# Compress the application code
+# Create a clean build directory and install dependencies there to avoid polluting the src folder
+resource "null_resource" "build_lambda" {
+  triggers = {
+    requirements = filesha256("${path.module}/requirements.txt")
+    code_hash    = sha256(join("", [for f in fileset(path.module, "*.py") : filesha256("${path.module}/${f}")]))
+  }
+
+  provisioner "local-exec" {
+    command = <<EOT
+      rm -rf ${path.module}/../outputs/build
+      mkdir -p ${path.module}/../outputs/build
+      cp ${path.module}/*.py ${path.module}/../outputs/build/
+      if command -v uv &> /dev/null; then
+        uv pip install --system -r ${path.module}/requirements.txt -t ${path.module}/../outputs/build/
+      else
+        pip install -r ${path.module}/requirements.txt -t ${path.module}/../outputs/build/
+      fi
+    EOT
+  }
+}
+
+# Compress the clean build folder
 data "archive_file" "app_zip" {
-  
+  depends_on  = [null_resource.build_lambda]
   type        = "zip"
-  source_dir  = "${path.module}"
+  source_dir  = "${path.module}/../outputs/build"
   output_path = "${path.module}/../outputs/app_function.zip"
 }
 
