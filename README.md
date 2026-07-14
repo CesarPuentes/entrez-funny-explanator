@@ -1,8 +1,18 @@
 # Entrez-Funny-Explanator
 
+## Sample input:
+
+
+```bash
+
+curl -X POST -H "Content-Type: application/json"      -d '{"gene": "BRCA1"}'      https://xxxxxx.lambda-url.us-east-1.on.aws/
+
+```
+
 ## Sample output:
 
 ```json
+
 {
   "gene_name": "TP53",
   "biological_function": "Tumor suppressor that regulates cell cycle arrest, apoptosis, senescence, DNA repair, and metabolism in response to cellular stress.",
