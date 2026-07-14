@@ -64,16 +64,25 @@ The application logic lives in `src/app.py` to keep it readable, while cloud-spe
 The project is already configured to execute correctly on either platform out-of-the-box!
 
 **Note on Clean Dependency Packaging (No Directory Pollution):**
-*   **AWS (Lambda)**: The Terraform configuration uses a temporary build directory (`../outputs/build`) in the background. It copies only the necessary Python code and automatically installs package requirements there (using `uv` if available, falling back to `pip`) before zipping. Your local `src/` folder remains completely clean.
+*   **AWS (Lambda)**: The setup script uses a temporary build directory (`build`). It copies only the necessary Python code and automatically installs package requirements there (using `uv` if available, falling back to `pip`) before zipping.
 *   **GCP (Cloud Functions)**: GCP builds your function natively on the cloud using `src/requirements.txt`. No local package installations are required for deploying.
 
 #### Deploying with Terraform
+
+**🐳 Docker Setup for Terraform**
+If you don't have Terraform installed locally and want to use Docker, set up this exact alias in your terminal profile (e.g. `~/.bashrc`) before starting:
+```bash
+alias terraform='docker run --rm -it -v $(pwd):/workspace -w /workspace hashicorp/terraform:latest'
+```
+*Note: If you use this alias, you MUST run all `terraform` commands from inside the `src/` directory so the container can mount and access the build files.*
 Initialize and apply the Terraform configuration for your chosen provider.
+
+The setup script `install.py` will automatically prepare the `main.tf` file for your chosen provider. However, if you are setting this up manually, you can simply copy the correct template:
 
 **For AWS:**
 ```bash
 cd src
-ln -sf aws.tf main.tf
+cp terraform_templates/aws.tf.tmpl main.tf
 terraform init
 terraform apply
 ```
@@ -81,9 +90,19 @@ terraform apply
 **For GCP:**
 ```bash
 cd src
-ln -sf gcp.tf main.tf
+cp terraform_templates/gcp.tf.tmpl main.tf
 terraform init
 terraform apply
+```
+
+### 🧪 Testing the Cloud Deployment
+After running `terraform apply`, Terraform will output a `function_url` in your terminal. You can test your live cloud function using `curl` by sending a JSON payload.
+
+```bash
+# Replace <YOUR_FUNCTION_URL> with the output provided by Terraform
+curl -X POST -H "Content-Type: application/json" \
+     -d '{"gene": "BRCA1"}' \
+     <YOUR_FUNCTION_URL>
 ```
 
 ### 🤖 CI/CD with GitHub Actions
@@ -103,5 +122,3 @@ To use them, you must configure the following **Secrets** in your GitHub reposit
 #### If deploying to GCP:
 *   `GCP_PROJECT_ID`: Your Google Cloud Project ID.
 *   `GCP_SA_KEY`: The complete JSON content of your GCP Service Account (with Editor or Cloud Functions Admin permissions).
-
-*Note: The workflows are configured to ignore the unused cloud provider's Terraform file to prevent conflicts.*

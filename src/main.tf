@@ -31,9 +31,21 @@
 # =================================================================
 
 
+variable "aws_access_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "aws_secret_key" {
+  type      = string
+  sensitive = true
+}
+
 # Configure the AWS Provider
 provider "aws" {
-  region = "us-east-1"
+  region     = "us-east-1"
+  access_key = var.aws_access_key
+  secret_key = var.aws_secret_key
 }
 
 # Declare the variable for the DeepSeek API key
@@ -43,33 +55,13 @@ variable "deepseek_api_key" {
   sensitive   = true
 }
 
-# Create a clean build directory and install dependencies there to avoid polluting the src folder
-resource "null_resource" "build_lambda" {
-  triggers = {
-    requirements = filesha256("${path.module}/requirements.txt")
-    code_hash    = sha256(join("", [for f in fileset(path.module, "*.py") : filesha256("${path.module}/${f}")]))
-  }
-
-  provisioner "local-exec" {
-    command = <<EOT
-      rm -rf ${path.module}/../outputs/build
-      mkdir -p ${path.module}/../outputs/build
-      cp ${path.module}/*.py ${path.module}/../outputs/build/
-      if command -v uv &> /dev/null; then
-        uv pip install --system -r ${path.module}/requirements.txt -t ${path.module}/../outputs/build/
-      else
-        pip install -r ${path.module}/requirements.txt -t ${path.module}/../outputs/build/
-      fi
-    EOT
-  }
-}
+# Build step is now handled by install.py/build.py because Terraform Docker container lacks pip
 
 # Compress the clean build folder
 data "archive_file" "app_zip" {
-  depends_on  = [null_resource.build_lambda]
   type        = "zip"
-  source_dir  = "${path.module}/../outputs/build"
-  output_path = "${path.module}/../outputs/app_function.zip"
+  source_dir  = "${path.module}/build"
+  output_path = "${path.module}/app_function.zip"
 }
 
 # 2. Create an IAM Role so Lambda has permission to run and write logs
@@ -119,4 +111,23 @@ resource "aws_lambda_function" "ai_lambda" {
       ENTREZ_EMAIL     = var.entrez_email
     }
   }
+}
+
+# 4. Expose the Lambda Function via a Public HTTP URL
+resource "aws_lambda_function_url" "lambda_url" {
+  function_name      = aws_lambda_function.ai_lambda.function_name
+  authorization_type = "NONE"
+}
+
+# Grant public access to invoke the URL
+resource "aws_lambda_permission" "allow_url_invoke" {
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.ai_lambda.function_name
+  principal              = "*"
+  function_url_auth_type = "NONE"
+}
+
+# Output the URL after Terraform finishes
+output "function_url" {
+  value = aws_lambda_function_url.lambda_url.function_url
 }

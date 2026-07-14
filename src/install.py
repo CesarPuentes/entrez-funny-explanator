@@ -48,16 +48,38 @@ def main():
         # Write terraform.tfvars for Terraform deployment
         tfvars_content = f'deepseek_api_key = "{deepseek_key}"\n'
         tfvars_content += f'entrez_email = "{entrez_email}"\n'
-        if provider == "gcp":
+        if provider == "aws":
+            tfvars_content += f'aws_access_key = "{aws_access_key}"\n'
+            tfvars_content += f'aws_secret_key = "{aws_secret_key}"\n'
+        elif provider == "gcp":
             tfvars_content += f'gcp_project_id = "{gcp_project_id}"\n'
             
+        import shutil
+        shutil.copy(f"terraform_templates/{provider}.tf.tmpl", "main.tf")
+        
         with open("terraform.tfvars", "w") as f:
             f.write(tfvars_content)
             
         print("✅ terraform.tfvars generated successfully.")
+        
+        if provider == "aws":
+            print("\nBuilding AWS Lambda package locally...")
+            import os, subprocess
+            os.makedirs("build", exist_ok=True)
+            for file in os.listdir("."):
+                if file.endswith(".py"):
+                    shutil.copy(file, "build/")
+            try:
+                # AWS Lambda runs Python 3.11, so we must explicitly tell uv to fetch 3.11 wheels
+                # otherwise it fetches cp313 (Python 3.13) wheels which will crash Lambda with "No module named pydantic_core._pydantic_core"
+                subprocess.run(["uv", "pip", "install", "--system", "--python", "3.11", "-r", "requirements.txt", "-t", "build/"], check=True)
+            except FileNotFoundError:
+                subprocess.run(["pip", "install", "-r", "requirements.txt", "-t", "build/"], check=True)
+            print("✅ AWS Lambda package built successfully.")
+
         print("\nNext steps:")
         print("1. Cloud handlers are pre-configured in `aws_handler.py` and `main.py` (for GCP).")
-        print(f"2. Run 'terraform init' and 'terraform apply' using {provider.upper()}.tf")
+        print("2. Run 'terraform init' and 'terraform apply'")
     else:
         print("\nNext steps:")
         print("Run 'python app.py' to start the application locally.")

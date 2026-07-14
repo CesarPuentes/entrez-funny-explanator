@@ -27,3 +27,4 @@ outputs/
 *.zip
 aws.tf.ignore
 gcp.tf.ignore
+build
