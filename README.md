@@ -1,0 +1,86 @@
+# Entrez-Funny-Explanator
+
+## 🧬 Overview
+Get explanations of what a gene does in a funny way. This project bridges the gap between **Bioinformatics** and **AI Engineering**.
+It automates clinical research for a given human gene by fetching data from the US government's public API (NCBI) and passing it to an LLM (DeepSeek) to analyze, summarize, and structure the dense scientific data. 
+
+The application returns a standardized JSON object ready to be consumed by a frontend or medical application.
+
+## 🚀 Technical Requirements
+* **Python 3.10+** (managed with `uv` recommended)
+* `biopython`: To connect with NCBI Entrez.
+* `openai`: Official client to query DeepSeek.
+* `pydantic` (Optional): To enforce strict JSON typings.
+* `terraform`: For cloud deployment infrastructure.
+
+## 🛠️ Setup Instructions
+
+### 1. Local Configuration
+We have included a setup script to streamline the environment configuration.
+From the `src` folder, run the interactive installer:
+
+```bash
+cd src
+python install.py
+```
+*   You will be prompted for your **DeepSeek API Key** and your **NCBI Entrez Email**.
+*   You will be asked to choose a deployment target (**AWS**, **GCP**, or **Local Only**).
+*   If you choose a cloud provider, it will automatically generate a `.env` file (for local testing) and a `terraform.tfvars` file (for cloud deployment).
+*   If you choose Local Only, it will skip the Terraform configuration and strictly set up your `.env` file for local execution.
+
+### 2. Local Execution
+You can run the script locally to test the integration.
+
+```bash
+cd src
+python app.py
+```
+
+### 3. Cloud Deployment (AWS / GCP)
+Once you confirm that the local execution works, you can deploy it to the cloud.
+
+#### Preparing the Code
+The application logic lives in `src/app.py` to keep it readable, while cloud-specific deployment handlers have been separated:
+- **AWS**: Handled by `src/aws_handler.py`.
+- **GCP**: Handled by `src/main.py` (GCP Gen 1 strictly requires `main.py` as the entry point).
+
+The project is already configured to execute correctly on either platform out-of-the-box!
+
+#### Deploying with Terraform
+Initialize and apply the Terraform configuration for your chosen provider.
+
+**For AWS:**
+```bash
+cd src
+ln -sf aws.tf main.tf
+terraform init
+terraform apply
+```
+
+**For GCP:**
+```bash
+cd src
+ln -sf gcp.tf main.tf
+terraform init
+terraform apply
+```
+
+### 🤖 CI/CD with GitHub Actions
+This project includes automated deployment workflows via GitHub Actions!
+They are located in the `.github/workflows/` directory.
+
+To use them, you must configure the following **Secrets** in your GitHub repository settings (`Settings -> Secrets and variables -> Actions`):
+
+#### Common Secrets
+*   `DEEPSEEK_API_KEY`: Your DeepSeek API key.
+*   `ENTREZ_EMAIL`: An email address to identify your requests to NCBI Entrez.
+
+#### If deploying to AWS:
+*   `AWS_ACCESS_KEY_ID`: Your AWS Access Key.
+*   `AWS_SECRET_ACCESS_KEY`: Your AWS Secret Access Key.
+
+#### If deploying to GCP:
+*   `GCP_PROJECT_ID`: Your Google Cloud Project ID.
+*   `GCP_SA_KEY`: The complete JSON content of your GCP Service Account (with Editor or Cloud Functions Admin permissions).
+
+*Note: The workflows are configured to ignore the unused cloud provider's Terraform file to prevent conflicts.*

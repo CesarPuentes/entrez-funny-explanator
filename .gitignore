@@ -1,0 +1,29 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Sensitive Configuration (API Keys, Credentials)
+.env
+*.tfvars
+
+# Terraform files
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+# Python cache / builds
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Local deployment packaging outputs
+outputs/
+*.zip
+aws.tf.ignore
+gcp.tf.ignore

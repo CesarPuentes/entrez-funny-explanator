@@ -1,0 +1,49 @@
+name: Deploy to GCP
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Terraform to GCP
+    runs-on: ubuntu-latest
+    
+    env:
+      TF_VAR_deepseek_api_key: ${{ secrets.DEEPSEEK_API_KEY }}
+      TF_VAR_gcp_project_id: ${{ secrets.GCP_PROJECT_ID }}
+      TF_VAR_entrez_email: ${{ secrets.ENTREZ_EMAIL }}
+      
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.5.0"
+
+      - name: Terraform Init
+        working-directory: ./src
+        run: |
+          # Hide the AWS configuration so Terraform doesn't try to deploy both
+          mv aws.tf aws.tf.ignore || true
+          terraform init
+
+      - name: Terraform Plan
+        working-directory: ./src
+        run: terraform plan
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'
+        working-directory: ./src
+        run: terraform apply -auto-approve

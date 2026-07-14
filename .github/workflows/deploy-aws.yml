@@ -1,0 +1,51 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Terraform to AWS
+    runs-on: ubuntu-latest
+    
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: "us-east-1"
+      TF_VAR_deepseek_api_key: ${{ secrets.DEEPSEEK_API_KEY }}
+      TF_VAR_entrez_email: ${{ secrets.ENTREZ_EMAIL }}
+      
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.5.0"
+
+      - name: Install Python Dependencies
+        working-directory: ./src
+        run: |
+          pip install -r requirements.txt -t .
+
+      - name: Terraform Init
+        working-directory: ./src
+        run: |
+          # Hide the GCP configuration so Terraform doesn't try to deploy both
+          mv gcp.tf gcp.tf.ignore || true
+          terraform init
+
+      - name: Terraform Plan
+        working-directory: ./src
+        run: terraform plan
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'
+        working-directory: ./src
+        run: terraform apply -auto-approve
