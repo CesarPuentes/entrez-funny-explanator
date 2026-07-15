@@ -1,4 +1,4 @@
-# Entrez-Funny-Explanator
+# Entrez-Funny-Explainer
 
 ## Sample input:
 

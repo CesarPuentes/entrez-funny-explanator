@@ -75,7 +75,7 @@ resource "google_storage_bucket_object" "function_zip_object" {
 
 # Create the Cloud Function (Equivalent to Lambda)
 resource "google_cloudfunctions_function" "ai_function" {
-  name        = "entrez-funny-explanator"
+  name        = "entrez-funny-Explainer"
   description = "Get explanations of what a gene does in a funny way."
   runtime     = "python311"
 
